@@ -159,27 +159,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        def min_value(gameState: GameState, depth):
-            if gameState.isWin() or gameState.isLose() or len(gameState.getLegalActions(0)) == 0 or depth == self.depth:
-                return (self.evaluationFunction(gameState), None)
-            
-            v = math.inf
-            for action in gameState.getLegalActions(0):
-                v = min(v, max_value(gameState.generateSuccessor(0, action)), depth+1)
-
-            return v
-
-            # actions = gameState.getLegalActions(0)
-            # if len(actions) == 0 or gameState.isWin() or gameState.isLose():
-            #     return self.evaluationFunction(gameState)
-            
-            # v = math.inf
-
-            # for item in actions:
-            #     v = min(v, max_value(gameState.generateSuccessor(0, item)))
-
-            # return v
-
 
         def max_value(gameState: GameState, depth):
             if gameState.isWin() or gameState.isLose() or len(gameState.getLegalActions(0)) == 0 or depth == self.depth:
@@ -187,18 +166,27 @@ class MinimaxAgent(MultiAgentSearchAgent):
             
             v = (-math.inf)
             for action in gameState.getLegalActions(0):
-                v = max(v, min_value(gameState.generateSuccessor(0, action)), depth+1)
+                v = max(v, min_value(gameState.generateSuccessor(0, action)), 1, depth+1)
 
             return v
-            # actions = gameState.getLegalActions(0)
-            # if len(actions) == 0 or gameState.isWin() or gameState.isLose():
-            #     return self.evaluationFunction(gameState)
-            
-            # v = -math.inf
-            # for item in actions:
-            #     v = max(v, min_value(gameState.generateSuccessor(0, item)))
 
-            # return v
+
+
+        def min_value(gameState: GameState, depth, id):
+            if gameState.isWin() or gameState.isLose() or len(gameState.getLegalActions(id)) == 0 or depth == self.depth:
+                return (self.evaluationFunction(gameState), None)
+            
+            v = math.inf
+            for action in gameState.getLegalActions(0):
+                if id == gameState.getNumAgents() - 1:
+                    v = min(v, max_value(gameState.generateSuccessor(id, action)), depth + 1)
+                else:
+                    v = min(v, min_value(gameState.generateSuccessor(id, action)), id + 1, depth)
+
+            return v
+        
+        
+        return max_value(gameState, 0)[1]
 
         util.raiseNotDefined()
 
