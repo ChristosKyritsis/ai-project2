@@ -78,13 +78,9 @@ class ReflexAgent(Agent):
         "*** YOUR CODE HERE ***"
         foodList = newFood.asList()
         foodDistance = []
-        ghostDistance = []
 
         for item1 in foodList:
             foodDistance.append(manhattanDistance(item1, newPos))
-
-        for item2 in successorGameState.getGhostPositions():
-            ghostDistance.append(manhattanDistance(item2, newPos))
 
         # case where all food has been picked-up
         if len(foodDistance) == 0:
@@ -159,33 +155,70 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-
+        # max_value is the move for Pac-Man, so the id is equal to zero
         def max_value(gameState: GameState, depth):
-            if gameState.isWin() or gameState.isLose() or len(gameState.getLegalActions(0)) == 0 or depth == self.depth:
-                return (self.evaluationFunction(gameState, action), None)
-            
+            # legal moves for Pac-Man
+            actions = gameState.getLegalActions(0)
+            move = None
+            res = (None, move)
+            # Terminal test
+            if gameState.isWin() or gameState.isLose() or len(actions) == 0 or depth == self.depth:
+                res = (self.evaluationFunction(gameState), move)
+                return res
+
+            # v needs to be small enough in order to make sure a min value will replace it  
             v = (-math.inf)
-            for action in gameState.getLegalActions(0):
-                v = max(v, min_value(gameState.generateSuccessor(0, action)), 1, depth+1)
+            # res = ( -inf, None)
+            res = (v, move)
+            # Getting all the legal action from the list
+            for action in actions:
+                # [0] because we only care about the value and not the move itself
+                temp = min_value(gameState.generateSuccessor(0, action), depth, 1)[0]
+                # Getting the max value
+                if (temp > v):
+                    v = temp
+                    move = action
 
-            return v
+            res = (v, move)
+            return res
 
 
-
+        # min_value represents the ghosts, so the id is >= 1
+        # There is also an id parameter because there can be more than 1 ghosts
         def min_value(gameState: GameState, depth, id):
-            if gameState.isWin() or gameState.isLose() or len(gameState.getLegalActions(id)) == 0 or depth == self.depth:
-                return (self.evaluationFunction(gameState), None)
-            
-            v = math.inf
-            for action in gameState.getLegalActions(0):
-                if id == gameState.getNumAgents() - 1:
-                    v = min(v, max_value(gameState.generateSuccessor(id, action)), depth + 1)
-                else:
-                    v = min(v, min_value(gameState.generateSuccessor(id, action)), id + 1, depth)
+            # legal moves of Ghost
+            actions = gameState.getLegalActions(id)
+            move = None
+            res = (None, move)
+            # Terminal test
+            if gameState.isWin() or gameState.isLose() or len(actions) == 0 or depth == self.depth:
+                res = (self.evaluationFunction(gameState), move)
+                return res
 
-            return v
+            # v needs to be big enough in order to make sure a max value will replace it  
+            v = math.inf
+            res = (v, move)
+            # For every legal move
+            for action in actions:
+                if id == gameState.getNumAgents() - 1:
+                    # Pac-Man's turn
+                    temp = max_value(gameState.generateSuccessor(id, action), depth + 1)[0]
+                    # min value
+                    if (temp < v):
+                        v = temp
+                        move = action
+                else:
+                    # Next ghost
+                    temp = min_value(gameState.generateSuccessor(id, action), depth, id + 1)[0]
+                    # min value
+                    if (temp < v):
+                        v = temp
+                        move = action
+
+            res = (v, move)
+            return res
         
-        
+        # return the move not the value
         return max_value(gameState, 0)[1]
 
         util.raiseNotDefined()
@@ -200,6 +233,72 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
+
+        # Here with the same logic as minimax we have two functions with the addition of the a, b parameters
+        def max_value(gameState: GameState, depth, a, b):
+            actions = gameState.getLegalActions(0)
+            move = None
+            res = (None, move)
+            # Terminal test
+            if gameState.isWin() or gameState.isLose() or len(actions) == 0 or depth == self.depth:
+                res = (self.evaluationFunction(gameState), move)
+                return res
+            
+            v = (-math.inf)
+            res = (v, move)
+
+            for action in actions:
+                temp = min_value(gameState.generateSuccessor(0, action), depth, a, b, 1)[0]
+                if temp > v:
+                    v = temp
+                    move = action
+                if v > b:
+                    return (v, move)
+                
+                a = max(a, v)
+
+            res = (v, move)
+            return res
+        
+
+
+        def min_value(gameState: GameState, depth, a, b, id):
+            actions = gameState.getLegalActions(id)
+            move = None
+            res = (None, move)
+            # Terminal test
+            if gameState.isWin() or gameState.isLose() or len(actions) == 0 or depth == self.depth:
+                res = (self.evaluationFunction(gameState), move)
+                return res
+            
+            v = math.inf
+            res = (v, move)
+
+            for action in actions:
+                if id == gameState.getNumAgents() - 1:
+                    temp = max_value(gameState.generateSuccessor(id, action), depth + 1, a, b)[0]
+                    if temp < v:
+                        v = temp
+                        move = action
+                else:
+                    temp = min_value(gameState.generateSuccessor(id, action), depth, a, b, id + 1)[0]
+                    if temp < v:
+                        v = temp
+                        move = action
+
+                if v < a:
+                    return (v, move)
+                
+                b = min(b, v)
+
+            res = (v, move)
+            return res
+        
+
+        return max_value(gameState, 0, (-math.inf), math.inf)[1]
+
+            
+
         util.raiseNotDefined()
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
