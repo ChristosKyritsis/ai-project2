@@ -399,7 +399,7 @@ def betterEvaluationFunction(currentGameState: GameState):
     for gh in ghosts:
         if gh.scaredTimer > 0:
             scaredGhosts.append(manhattanDistance(pacPos, gh.getGhostPosition()))
-        elif g.scaredTimer == 0:
+        elif gh.scaredTimer == 0:
             regularGhosts.append(manhattanDistance(pacPos, gh.getGhostPosition()))
 
     if len(scaredGhosts) == 0:
