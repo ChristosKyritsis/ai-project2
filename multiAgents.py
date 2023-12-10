@@ -93,8 +93,9 @@ class ReflexAgent(Agent):
             if item3 == newPos:
                 return (-math.inf)
 
-        return 1000/sum(foodDistance) +10000/len(foodDistance)
-        #return successorGameState.getScore()
+        #return 1000/sum(foodDistance) +10000/len(foodDistance)
+        return successorGameState.getScore() + len(newGhostStates)/len(newScaredTimes)
+        #return successorGameState.getScore() original
 
 def scoreEvaluationFunction(currentGameState: GameState):
     """
@@ -373,6 +374,47 @@ def betterEvaluationFunction(currentGameState: GameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
+    # Checking if Game is over
+    if currentGameState.isWin():
+        return math.inf
+    
+    if currentGameState.isLose():
+        return (-math.inf)
+    
+    # if Game not over
+    # Position of the Pac-Man
+    pacPos = currentGameState.getPacmanPosition()
+    # Taking in consideration the States rather than the Positions as instructed
+    ghosts = currentGameState.getGhostStates()
+    food = currentGameState.getFood().asList()
+
+    # Keeping track of the distance between Pac-Man and all of the food
+    foodDistance = []
+    for f in food:
+        foodDistance.append(manhattanDistance(f, pacPos))
+
+    # Keepin Trsck of the distance between Pac-Man and the ghosts
+    regularGhosts = []
+    scaredGhosts = []
+    for gh in ghosts:
+        if gh.scaredTimer > 0:
+            scaredGhosts.append(manhattanDistance(pacPos, gh.getGhostPosition()))
+        elif g.scaredTimer == 0:
+            regularGhosts.append(manhattanDistance(pacPos, gh.getGhostPosition()))
+
+    if len(scaredGhosts) == 0:
+        sGhostEval = 2.0 * min(scaredGhosts)
+    
+    if len(regularGhosts) == 0:
+        rGhostEval = 0.5 * min(regularGhosts)
+
+    newScore = scoreEvaluationFunction(currentGameState) 
+    newScore -= rGhostEval + sGhostEval + 5 * min(foodDistance)
+    return newScore
+
+
+
+
     util.raiseNotDefined()
 
 # Abbreviation
