@@ -83,7 +83,7 @@ class ReflexAgent(Agent):
             foodDistance.append(manhattanDistance(item1, newPos))
 
         # case where all food has been picked-up
-        if len(foodDistance) == 0:
+        if len(foodList) == 0:
             return math.inf
         
         if currentGameState.getPacmanPosition() == newPos:
@@ -93,8 +93,8 @@ class ReflexAgent(Agent):
             if item3 == newPos:
                 return (-math.inf)
 
-        #return successorGameState.getScore() + len(newGhostStates)/len(newScaredTimes)
-        return successorGameState.getScore() 
+        score = 10*successorGameState.getScore() - len(foodList) - min(foodDistance)
+        return score
 
 def scoreEvaluationFunction(currentGameState: GameState):
     """
@@ -247,11 +247,13 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             v = (-math.inf)
             res = (v, move)
 
+            # same with minimax, but checking if pruning can be made
             for action in actions:
                 temp = min_value(gameState.generateSuccessor(0, action), depth, a, b, 1)[0]
                 if temp > v:
                     v = temp
                     move = action
+                # Pruning check
                 if v > b:
                     return (v, move)
                 
@@ -274,6 +276,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             v = math.inf
             res = (v, move)
 
+            # Same with minimax, but with an extra if statement for pruning
             for action in actions:
                 if id == gameState.getNumAgents() - 1:
                     temp = max_value(gameState.generateSuccessor(id, action), depth + 1, a, b)[0]
@@ -319,6 +322,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             actions = gameState.getLegalActions(0)
             move = None
             res = (None, move)
+            # Terminal test
             if gameState.isWin() or gameState.isLose() or len(actions) == 0 or depth == self.depth:
                 res = (self.evaluationFunction(gameState), move)
                 return res
@@ -326,6 +330,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             v = (-math.inf)
             res = (v, move)
 
+            # Same with minimax, but calling for the chance finction instead
             for action in actions:
                 temp = chance(gameState.generateSuccessor(0, action), depth, 1)[0]
                 # Getting the max value
@@ -341,12 +346,14 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             actions = gameState.getLegalActions(id)
             move = None
             res = (None, move)
+            # Terminal test
             if gameState.isWin() or gameState.isLose() or len(actions) == 0 or depth == self.depth:
                 res = (self.evaluationFunction(gameState), move)
                 return res
 
             v = 0
             res = (v, move)
+            # Similar to minimax function
             for action in actions:
                 if id == gameState.getNumAgents() - 1:
                     temp = max_value(gameState.generateSuccessor(id, action), depth + 1)[0]
@@ -355,6 +362,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                     temp = chance(gameState.generateSuccessor(id, action), depth, id + 1)[0]
                     move = action
 
+                # Calculating the chance of a node
                 chanceNode = temp/len(actions)
                 v = v + chanceNode
 
@@ -395,6 +403,7 @@ def betterEvaluationFunction(currentGameState: GameState):
 
     regularGhosts = []
     scaredGhosts = []
+    # Making the distinction between regular ghosts and scared ghosts
     for g in ghosts:
         if g.scaredTimer:
             scaredGhosts.append(g)
@@ -411,27 +420,40 @@ def betterEvaluationFunction(currentGameState: GameState):
         distRegular.append(manhattanDistance(pacPos, rg.getPosition()))
     
     # initializing score
-    score = currentGameState.getScore()
+    score = 10*currentGameState.getScore()
 
     # Depending on the distance between pac-man ghosts and food the score changes accordingly
-    for i in foodDistance:  
-        if i < 5:
-            score -= 100
+    # The closer a food is, the better. Same for scared ghosts
+    # For regular ghosts it's the opposite
+    for f in foodDistance:  
+        if f < 5:
+            score -= 40*f
+        elif f < 10:
+            score -= 30*f
         else:
-            score -= 50
+            score -= 20*f
 
-    for i in distScared:
-        if i < 5:
-            score -= 70
+    for sc in distScared:
+        if sc < 5:
+            score -= 30*sc
+        elif sc < 10:
+            score -= 23*sc
         else:
-            score -= 35
+            score -= 15*sc
 
-    for i in distRegular:
-        if i < 5:
-            score -= 40
+    for reg in distRegular:
+        if reg < 5:
+            score -= 35*reg
+        elif reg < 10:
+            score -= 45*reg
         else:
-            score -= 80
- 
+            score -= 60*reg
+
+    # Lastly the score changes based on the number of the food and capsules available
+    # The less the better
+    capsuleCount = currentGameState.getCapsules()
+    score -= len(food) * 10 + len(capsuleCount) * 60
+
     return score
 
     util.raiseNotDefined()
