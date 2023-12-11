@@ -93,9 +93,8 @@ class ReflexAgent(Agent):
             if item3 == newPos:
                 return (-math.inf)
 
-        #return 1000/sum(foodDistance) +10000/len(foodDistance)
-        return successorGameState.getScore() + len(newGhostStates)/len(newScaredTimes)
-        #return successorGameState.getScore() original
+        #return successorGameState.getScore() + len(newGhostStates)/len(newScaredTimes)
+        return successorGameState.getScore() 
 
 def scoreEvaluationFunction(currentGameState: GameState):
     """
@@ -381,9 +380,10 @@ def betterEvaluationFunction(currentGameState: GameState):
     if currentGameState.isLose():
         return (-math.inf)
     
-    # if Game not over
+    # if Game is not over
     # Position of the Pac-Man
     pacPos = currentGameState.getPacmanPosition()
+    
     # Taking in consideration the States rather than the Positions as instructed
     ghosts = currentGameState.getGhostStates()
     food = currentGameState.getFood().asList()
@@ -391,29 +391,48 @@ def betterEvaluationFunction(currentGameState: GameState):
     # Keeping track of the distance between Pac-Man and all of the food
     foodDistance = []
     for f in food:
-        foodDistance.append(manhattanDistance(f, pacPos))
+        foodDistance.append(manhattanDistance(pacPos, f))
 
-    # Keepin Trsck of the distance between Pac-Man and the ghosts
     regularGhosts = []
     scaredGhosts = []
-    for gh in ghosts:
-        if gh.scaredTimer > 0:
-            scaredGhosts.append(manhattanDistance(pacPos, gh.getGhostPosition()))
-        elif gh.scaredTimer == 0:
-            regularGhosts.append(manhattanDistance(pacPos, gh.getGhostPosition()))
+    for g in ghosts:
+        if g.scaredTimer:
+            scaredGhosts.append(g)
+        else:
+            regularGhosts.append(g)
 
-    if len(scaredGhosts) == 0:
-        sGhostEval = 2.0 * min(scaredGhosts)
+    # Keeping track of the distance between Pac-Man and the ghosts
+    distScared = []
+    for sg in scaredGhosts:
+        distScared.append(manhattanDistance(pacPos, sg.getPosition()))
+
+    distRegular = []
+    for rg in regularGhosts:
+        distRegular.append(manhattanDistance(pacPos, rg.getPosition()))
     
-    if len(regularGhosts) == 0:
-        rGhostEval = 0.5 * min(regularGhosts)
+    # initializing score
+    score = currentGameState.getScore()
 
-    newScore = scoreEvaluationFunction(currentGameState) 
-    newScore -= rGhostEval + sGhostEval + 5 * min(foodDistance)
-    return newScore
+    # Depending on the distance between pac-man ghosts and food the score changes accordingly
+    for i in foodDistance:  
+        if i < 5:
+            score -= 100
+        else:
+            score -= 50
 
+    for i in distScared:
+        if i < 5:
+            score -= 70
+        else:
+            score -= 35
 
-
+    for i in distRegular:
+        if i < 5:
+            score -= 40
+        else:
+            score -= 80
+ 
+    return score
 
     util.raiseNotDefined()
 
