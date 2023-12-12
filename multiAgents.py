@@ -86,9 +86,7 @@ class ReflexAgent(Agent):
         if len(foodList) == 0:
             return math.inf
         
-        if currentGameState.getPacmanPosition() == newPos:
-            return (-math.inf)
-        
+        # Ghost ate pac-man
         for item2 in successorGameState.getGhostPositions():
             if item2 == newPos:
                 return (-math.inf)
@@ -421,6 +419,7 @@ def betterEvaluationFunction(currentGameState: GameState):
     distRegular = []
     for rg in regularGhosts:
         distRegular.append(manhattanDistance(pacPos, rg.getPosition()))
+
     
     # initializing score
     score = 10*currentGameState.getScore()
