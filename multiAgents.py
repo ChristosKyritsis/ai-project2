@@ -89,8 +89,8 @@ class ReflexAgent(Agent):
         if currentGameState.getPacmanPosition() == newPos:
             return (-math.inf)
         
-        for item3 in successorGameState.getGhostPositions():
-            if item3 == newPos:
+        for item2 in successorGameState.getGhostPositions():
+            if item2 == newPos:
                 return (-math.inf)
 
         score = 10*successorGameState.getScore() - len(foodList) - min(foodDistance)
@@ -257,6 +257,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                 if v > b:
                     return (v, move)
                 
+                # update a
                 a = max(a, v)
 
             res = (v, move)
@@ -289,9 +290,11 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                         v = temp
                         move = action
 
+                # Pruning check
                 if v < a:
                     return (v, move)
                 
+                # update b
                 b = min(b, v)
 
             res = (v, move)
@@ -329,8 +332,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             
             v = (-math.inf)
             res = (v, move)
-
-            # Same with minimax, but calling for the chance finction instead
+            # Same with minimax, but calling for the chance function instead
             for action in actions:
                 temp = chance(gameState.generateSuccessor(0, action), depth, 1)[0]
                 # Getting the max value
@@ -356,6 +358,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             # Similar to minimax function
             for action in actions:
                 if id == gameState.getNumAgents() - 1:
+                    # Pac-Man's turn
                     temp = max_value(gameState.generateSuccessor(id, action), depth + 1)[0]
                     move = action
                 else:
